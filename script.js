@@ -6,19 +6,39 @@ const AI = "O";
 
 let board = ["", "", "", "", "", "", "", "", ""];
 let gameOver = false;
+let winningCells = [];
 
-// Create the game board
+// Create Board
 function createBoard() {
+
     boardElement.innerHTML = "";
 
     board.forEach((cell, index) => {
+
         const cellElement = document.createElement("div");
+
         cellElement.classList.add("cell");
+
         cellElement.textContent = cell;
+
+        if (cell === "X") {
+            cellElement.classList.add("x");
+        }
+
+        if (cell === "O") {
+            cellElement.classList.add("o");
+        }
+
+        if (winningCells.includes(index)) {
+            cellElement.classList.add("winner");
+        }
+
         cellElement.addEventListener("click", () => playerMove(index));
 
         boardElement.appendChild(cellElement);
+
     });
+
 }
 
 // Player Move
@@ -27,24 +47,30 @@ function playerMove(index) {
     if (board[index] !== "" || gameOver) return;
 
     board[index] = HUMAN;
+
     updateBoard();
 
     if (checkWinner(board, HUMAN)) {
+
         endGame("🎉 You Win!");
+
         return;
     }
 
     if (isBoardFull(board)) {
-        endGame("🤝 It's a Draw!");
+
+        endGame("🤝 Draw!");
+
         return;
     }
 
-    statusElement.textContent = "AI is Thinking...";
+    statusElement.textContent = "🤖 AI Thinking...";
 
     setTimeout(aiMove, 300);
+
 }
 
-// AI Move using Minimax
+// AI Move
 function aiMove() {
 
     let bestScore = -Infinity;
@@ -61,10 +87,14 @@ function aiMove() {
             board[i] = "";
 
             if (score > bestScore) {
+
                 bestScore = score;
                 move = i;
+
             }
+
         }
+
     }
 
     board[move] = AI;
@@ -72,25 +102,32 @@ function aiMove() {
     updateBoard();
 
     if (checkWinner(board, AI)) {
+
         endGame("🤖 AI Wins!");
+
         return;
+
     }
 
     if (isBoardFull(board)) {
-        endGame("🤝 It's a Draw!");
+
+        endGame("🤝 Draw!");
+
         return;
+
     }
 
     statusElement.textContent = "Your Turn (X)";
+
 }
 
 // Minimax Algorithm
 function minimax(currentBoard, depth, isMaximizing) {
 
-    if (checkWinner(currentBoard, AI))
+    if (checkWinnerMini(currentBoard, AI))
         return 10 - depth;
 
-    if (checkWinner(currentBoard, HUMAN))
+    if (checkWinnerMini(currentBoard, HUMAN))
         return depth - 10;
 
     if (isBoardFull(currentBoard))
@@ -111,7 +148,9 @@ function minimax(currentBoard, depth, isMaximizing) {
                 currentBoard[i] = "";
 
                 bestScore = Math.max(bestScore, score);
+
             }
+
         }
 
         return bestScore;
@@ -131,17 +170,21 @@ function minimax(currentBoard, depth, isMaximizing) {
                 currentBoard[i] = "";
 
                 bestScore = Math.min(bestScore, score);
+
             }
+
         }
 
         return bestScore;
+
     }
+
 }
 
-// Check Winner
+// Check Winner (Stores winning cells)
 function checkWinner(boardState, player) {
 
-    const winningCombinations = [
+    const patterns = [
 
         [0,1,2],
         [3,4,5],
@@ -153,25 +196,61 @@ function checkWinner(boardState, player) {
 
         [0,4,8],
         [2,4,6]
+
     ];
 
-    return winningCombinations.some(combination =>
+    for (let pattern of patterns) {
 
-        combination.every(index => boardState[index] === player)
+        if (pattern.every(index => boardState[index] === player)) {
 
-    );
+            winningCells = pattern;
+
+            return true;
+
+        }
+
+    }
+
+    return false;
+
 }
 
-// Check Draw
+// Used by Minimax only
+function checkWinnerMini(boardState, player) {
+
+    const patterns = [
+
+        [0,1,2],
+        [3,4,5],
+        [6,7,8],
+
+        [0,3,6],
+        [1,4,7],
+        [2,5,8],
+
+        [0,4,8],
+        [2,4,6]
+
+    ];
+
+    return patterns.some(pattern =>
+        pattern.every(index => boardState[index] === player)
+    );
+
+}
+
+// Draw Check
 function isBoardFull(boardState) {
 
     return boardState.every(cell => cell !== "");
+
 }
 
-// Update UI
+// Update Board
 function updateBoard() {
 
     createBoard();
+
 }
 
 // End Game
@@ -180,6 +259,14 @@ function endGame(message) {
     gameOver = true;
 
     statusElement.textContent = message;
+
+    // Wait 2 seconds before restarting
+    setTimeout(() => {
+
+        restartGame();
+
+    }, 2000);
+
 }
 
 // Restart Game
@@ -187,12 +274,15 @@ function restartGame() {
 
     board = ["", "", "", "", "", "", "", "", ""];
 
+    winningCells = [];
+
     gameOver = false;
 
     statusElement.textContent = "Your Turn (X)";
 
     createBoard();
+
 }
 
-// Initialize Game
+// Start Game
 createBoard();
